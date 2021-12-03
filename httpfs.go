@@ -73,16 +73,16 @@ func DirList(w http.ResponseWriter, r *http.Request, f http.File, path string) (
 
 	header := DirHeader{
 		TextDirection: "ltr",
-		Language:      "zh",
+		Language:      "en",
 
-		Header: path + " 的索引",
+		Header:        "Index of " + path,
 
-		HeaderName:         "名称",
-		HeaderSize:         "大小",
-		HeaderDateModified: "修改日期",
+		HeaderName:         "Name",
+		HeaderSize:         "Size",
+		HeaderDateModified: "Date Modified",
 	}
 	if path != "/" {
-		header.ParentDirText = "[上级目录]"
+		header.ParentDirText = "[parent directory]"
 	}
 	rows := make([]Row, 0)
 	for i, n := 0, dirs.len(); i < n; i++ {

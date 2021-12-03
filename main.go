@@ -71,16 +71,17 @@ func toHTTPError(err error) (msg string, httpStatus int) {
 
 func main() {
 	bind := flag.String("bind", "127.0.0.1:8080", "listen address")
+	root := flag.String("root", "/", "root directory")
 	flag.Parse()
 
 	addr := *bind
-	http.Handle("/", FileServer(http.Dir("/")))
+	http.Handle("/", FileServer(http.Dir(*root)))
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		_, _= fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	fmt.Printf("Serving HTTP http://%s\n", listener.Addr().String())
+	fmt.Printf("Serving HTTP http://%s -> %s\n", listener.Addr().String(), *root)
 	err = http.Serve(listener, nil)
 	if err != nil {
 		_, _= fmt.Fprintln(os.Stderr, err)

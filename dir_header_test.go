@@ -10,14 +10,14 @@ import (
 func TestRender(t *testing.T) {
 	header := DirHeader{
 		TextDirection: "ltr",
-		Language:      "zh",
+		Language:      "en",
 
-		Header:        "/bin/ 的索引",
-		ParentDirText: "[上级目录]",
+		Header:        "Index of /bin/",
+		ParentDirText: "[parent directory]",
 
-		HeaderName:         "名称",
-		HeaderSize:         "大小",
-		HeaderDateModified: "修改日期",
+		HeaderName:         "Name",
+		HeaderSize:         "Size",
+		HeaderDateModified: "Date Modified",
 	}
 	rows := []Row{
 		{
