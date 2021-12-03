@@ -70,7 +70,7 @@ func toHTTPError(err error) (msg string, httpStatus int) {
 }
 
 func main() {
-	bind := flag.String("bind", "127.0.0.1:8080", "listen address")
+	bind := flag.String("bind", "0.0.0.0:8080", "listen address")
 	root := flag.String("root", "/", "root directory")
 	flag.Parse()
 
