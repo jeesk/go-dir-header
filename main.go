@@ -8,6 +8,8 @@ import (
 	"os"
 	"path"
 	"strings"
+
+	"github.com/fkxxyz/go-dir-header/dirHeader"
 )
 
 type fileHandler struct {
@@ -47,7 +49,7 @@ func (f *fileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if info.IsDir() {
-		DirList(w, r, fullPath, uPath)
+		dirHeader.DirList(w, fullPath, uPath)
 		return
 	}
 

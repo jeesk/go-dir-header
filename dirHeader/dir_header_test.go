@@ -1,4 +1,4 @@
-package main
+package dirHeader
 
 import (
 	"io/ioutil"

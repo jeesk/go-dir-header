@@ -1,4 +1,4 @@
-package main
+package dirHeader
 
 import (
 	"io/fs"
@@ -13,7 +13,7 @@ import (
 	"github.com/inhies/go-bytesize"
 )
 
-func DirList(w http.ResponseWriter, r *http.Request, fullPath, uPath string) (int, string) {
+func DirList(w http.ResponseWriter, fullPath, uPath string) (int, string) {
 	dirs, err := os.ReadDir(fullPath)
 	if err != nil {
 		http.Error(w, "Error reading directory", http.StatusInternalServerError)

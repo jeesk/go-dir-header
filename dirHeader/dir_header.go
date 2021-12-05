@@ -1,4 +1,4 @@
-package main
+package dirHeader
 
 // Reference link: https://chromium.googlesource.com/chromium/src/+/refs/heads/main/net/base/dir_header.html
 
