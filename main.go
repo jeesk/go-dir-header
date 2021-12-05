@@ -11,11 +11,11 @@ import (
 )
 
 type fileHandler struct {
-	root http.FileSystem
+	prefix string
 }
 
-func FileServer(root http.FileSystem) http.Handler {
-	return &fileHandler{root}
+func FileServer(prefix string) http.Handler {
+	return &fileHandler{prefix}
 }
 
 func (f *fileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -30,7 +30,8 @@ func (f *fileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	uPath = path.Clean(uPath)
 
-	file, err := f.root.Open(uPath)
+	fullPath := path.Join(f.prefix, uPath)
+	file, err := os.Open(fullPath)
 	if err != nil {
 		msg, code := toHTTPError(err)
 		http.Error(w, msg, code)
@@ -46,7 +47,7 @@ func (f *fileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if info.IsDir() {
-		DirList(w, r, file, uPath)
+		DirList(w, r, fullPath, uPath)
 		return
 	}
 
@@ -75,16 +76,20 @@ func main() {
 	flag.Parse()
 
 	addr := *bind
-	http.Handle("/", FileServer(http.Dir(*root)))
+	http.Handle("/", FileServer(*root))
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
-		_, _= fmt.Fprintln(os.Stderr, err)
+		_, _ = fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	fmt.Printf("Serving HTTP http://%s -> %s\n", listener.Addr().String(), *root)
+	addrS := listener.Addr().String()
+	if strings.HasPrefix(addrS, "[::]") {
+		addrS = "0.0.0.0" + addrS[4:]
+	}
+	fmt.Printf("Serving HTTP http://%s -> %s\n", addrS, *root)
 	err = http.Serve(listener, nil)
 	if err != nil {
-		_, _= fmt.Fprintln(os.Stderr, err)
+		_, _ = fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
