@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"net"
@@ -39,7 +40,9 @@ func (f *fileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, msg, code)
 		return
 	}
-	defer file.Close()
+	defer func(file *os.File) {
+		_ = file.Close()
+	}(file)
 
 	info, err := file.Stat()
 	if err != nil {
@@ -49,7 +52,48 @@ func (f *fileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if info.IsDir() {
-		dirHeader.DirList(w, fullPath, uPath)
+		format := r.URL.Query().Get("format")
+		switch format {
+		case "json":
+			data, err := dirHeader.ReadDirectory(fullPath, uPath)
+			if err != nil {
+				http.Error(w, "Error reading directory", http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			b, err := json.Marshal(data)
+			if err != nil {
+				http.Error(w, "json marshal error", http.StatusInternalServerError)
+				return
+			}
+			_, err = w.Write(b)
+			if err != nil {
+				http.Error(w, "Error writing body", http.StatusInternalServerError)
+				return
+			}
+		case "simple":
+			data, err := dirHeader.ReadDirectory(fullPath, uPath)
+			if err != nil {
+				http.Error(w, "Error reading directory", http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "text/plain")
+			content := ""
+			for i := range data.Rows {
+				content += data.Rows[i].Name
+				if data.Rows[i].IsDir {
+					content += "/"
+				}
+				content += "\n"
+			}
+			_, err = w.Write([]byte(content))
+			if err != nil {
+				http.Error(w, "Error writing body", http.StatusInternalServerError)
+				return
+			}
+		default:
+			dirHeader.DirList(w, fullPath, uPath)
+		}
 		return
 	}
 

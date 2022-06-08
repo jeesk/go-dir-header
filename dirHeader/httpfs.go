@@ -13,15 +13,17 @@ import (
 	"github.com/inhies/go-bytesize"
 )
 
-func DirList(w http.ResponseWriter, fullPath, uPath string) (int, string) {
+type Data struct {
+	Header DirHeader
+	Rows   []Row
+}
+
+func ReadDirectory(fullPath, uPath string) (*Data, error) {
 	dirs, err := os.ReadDir(fullPath)
 	if err != nil {
-		http.Error(w, "Error reading directory", http.StatusInternalServerError)
-		return http.StatusInternalServerError, "error reading directory: " + err.Error()
+		return nil, err
 	}
 	sort.Slice(dirs, func(i, j int) bool { return dirs[i].Name() < dirs[j].Name() })
-
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	header := DirHeader{
 		TextDirection: "ltr",
@@ -78,11 +80,27 @@ func DirList(w http.ResponseWriter, fullPath, uPath string) (int, string) {
 			DateModifiedString: modTime.Format("2006/01/02 15:04:05"),
 		})
 	}
-	html, err := DirHtml(&header, rows)
+
+	return &Data{
+		Header: header,
+		Rows:   rows,
+	}, nil
+}
+
+func DirList(w http.ResponseWriter, fullPath, uPath string) (int, string) {
+	data, err := ReadDirectory(fullPath, uPath)
+	if err != nil {
+		http.Error(w, "Error reading directory", http.StatusInternalServerError)
+		return http.StatusInternalServerError, "error reading directory: " + err.Error()
+	}
+
+	html, err := DirHtml(&data.Header, data.Rows)
 	if err != nil {
 		http.Error(w, "Error render", http.StatusInternalServerError)
 		return http.StatusInternalServerError, "error render: " + err.Error()
 	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	_, err = w.Write(html)
 	if err != nil {
 		http.Error(w, "Error writing body", http.StatusInternalServerError)
