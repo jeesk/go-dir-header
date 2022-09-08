@@ -20,8 +20,16 @@ type fileHandler struct {
 func FileServer(prefix string) http.Handler {
 	return &fileHandler{prefix}
 }
+func setupCORS(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+	(*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+}
 
 func (f *fileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if isCros {
+		setupCORS(&w)
+	}
 	if r.Method != "GET" {
 		http.NotFound(w, r)
 		return
@@ -96,7 +104,6 @@ func (f *fileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-
 	http.ServeContent(w, r, info.Name(), info.ModTime(), file)
 }
 
@@ -116,9 +123,12 @@ func toHTTPError(err error) (msg string, httpStatus int) {
 	return "500 Internal Server Error", http.StatusInternalServerError
 }
 
+var isCros bool
+
 func main() {
 	bind := flag.String("bind", "0.0.0.0:8080", "listen address")
 	root := flag.String("root", "/", "root directory")
+	isCros = *flag.Bool("cros", false, "is allow cros")
 	flag.Parse()
 
 	addr := *bind
